@@ -1,0 +1,44 @@
+# Compiled class files
+*.class
+target/
+*.jar
+*.war
+*.ear
+
+# Log files
+logs/
+*.log
+*.log.*
+*.gz
+
+# IDE files
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+.settings/
+.classpath
+.project
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Load test results
+load-test-results/
+
+# Maven wrapper
+.mvn/wrapper/maven-wrapper.jar
+
+# Spring Boot
+spring.log
+
+# Redis
+dump.rdb
+
+# Docker volumes
+postgres_data/
+redis_data/
+prometheus_data/
+grafana_data/

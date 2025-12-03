@@ -1,0 +1,178 @@
+# Application Configuration - LeaderboardService
+# INTENTIONALLY CONFIGURED FOR POOR PERFORMANCE
+
+spring:
+  application:
+    name: leaderboard-service
+
+  # Database Configuration
+  # Using PostgreSQL by default (can switch to H2 for simpler setup)
+  datasource:
+    url: jdbc:postgresql://localhost:5432/leaderboard
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+
+    # PROBLEM: Connection pool is TOO SMALL
+    # With N+1 queries, we need many connections
+    # Small pool = connection starvation = latency spikes
+    hikari:
+      maximum-pool-size: 5          # INTENTIONALLY TOO SMALL (should be 20-50)
+      minimum-idle: 2                # INTENTIONALLY TOO SMALL
+      connection-timeout: 30000      # 30 seconds (very long)
+      idle-timeout: 600000           # 10 minutes
+      max-lifetime: 1800000          # 30 minutes
+
+      # Enable connection pool metrics
+      register-mbeans: true
+
+  # JPA/Hibernate Configuration
+  jpa:
+    hibernate:
+      ddl-auto: none                 # Use schema.sql instead
+    show-sql: false                  # Set to true to see N+1 queries in logs
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+
+        # PROBLEM: Query batch size not configured
+        # Could batch operations but doesn't
+        # jdbc.batch_size: 20        # COMMENTED OUT - not using batching
+
+        # PROBLEM: Second-level cache DISABLED
+        # Could cache player profiles but doesn't
+        cache:
+          use_second_level_cache: false   # INTENTIONALLY DISABLED
+          use_query_cache: false          # INTENTIONALLY DISABLED
+
+  # SQL Initialization
+  sql:
+    init:
+      mode: always                   # Run schema.sql and data.sql on startup
+      schema-locations: classpath:schema.sql
+      data-locations: classpath:data.sql
+
+  # Redis Configuration (for caching - will be enabled later)
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 2000
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+
+  # Cache Configuration - DISABLED
+  cache:
+    type: none                       # PROBLEM: No caching! (should be redis)
+    # type: redis                    # Uncomment during optimization
+
+# Server Configuration
+server:
+  port: 8080
+
+  # PROBLEM: Thread pool too small for high concurrency
+  tomcat:
+    threads:
+      max: 20                        # INTENTIONALLY SMALL (should be 200+)
+      min-spare: 2                   # INTENTIONALLY SMALL
+    max-connections: 100             # INTENTIONALLY SMALL (should be 10000+)
+    accept-count: 10                 # INTENTIONALLY SMALL queue
+
+  # No timeout configured on requests
+  # Requests can hang indefinitely if service is slow
+
+# Actuator Configuration - For metrics and health checks
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+
+  endpoint:
+    health:
+      show-details: always
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
+
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    distribution:
+      # IMPORTANT: Enable percentile metrics to see P95/P99
+      percentiles-histogram:
+        http.server.requests: true
+        leaderboard.get_top_players: true
+        leaderboard.profile.fetch: true
+        leaderboard.api.request: true
+      # Specific percentiles to track
+      percentiles:
+        http.server.requests: 0.5, 0.95, 0.99
+        leaderboard.get_top_players: 0.5, 0.95, 0.99
+        leaderboard.api.request: 0.5, 0.95, 0.99
+      # Service Level Objectives (SLOs)
+      slo:
+        http.server.requests: 100ms,200ms,500ms,1s,2s
+
+# Logging Configuration
+logging:
+  level:
+    root: INFO
+    com.fourcoretech.leaderboard: DEBUG
+    org.hibernate.SQL: DEBUG          # See SQL queries (shows N+1 problem)
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE  # See query parameters
+    org.springframework.jdbc: DEBUG   # See JDBC operations
+
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+  file:
+    name: logs/spring.log
+
+# Application-specific configuration
+leaderboard:
+  # Default limits
+  default-limit: 100
+  max-limit: 1000
+
+  # Feature flags for optimizations (all disabled initially)
+  features:
+    caching-enabled: false           # Enable Redis caching
+    async-enabled: false             # Enable async processing
+    batch-enabled: false             # Enable batch queries
+
+  # Simulated latency settings (for educational purposes)
+  simulation:
+    latency-spike-probability: 0.2   # 20% chance of latency spike
+    min-spike-ms: 100
+    max-spike-ms: 500
+    processing-delay-min-ms: 2
+    processing-delay-max-ms: 7
+
+# H2 Database Configuration (Alternative to PostgreSQL for easier setup)
+---
+spring:
+  config:
+    activate:
+      on-profile: h2
+
+  datasource:
+    url: jdbc:h2:mem:leaderboard;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
