@@ -16,8 +16,10 @@ By the end of this lab, you'll be able to confidently explain and fix:
 - **Resilience Patterns** - Timeouts, circuit breakers, and retries
 
 **Why This Matters**: In job interviews and on the job, you'll be asked "How would you improve API performance?" or "Our P99 latency is terrible - what would you check?" This lab gives you hands-on experience with the exact problems you'll encounter in production systems.
+> 📘 Want the story version? See the full [Case Study](CASE-STUDY.md) for before/after metrics and approach.
 
 ## 🚀 **Quick Start**
+> 🧭 **Just want to run it?** Start with [QUICKSTART.md](QUICKSTART.md) for a 3-step setup.
 
 ### **Prerequisites**
 
@@ -172,6 +174,12 @@ The checklist guides you through:
 | **Database Queries** | 101 | 1 | **99% reduction** |
 | **Cache Hit Rate** | 0% | 80%+ | N/A |
 | **Throughput** | 50 req/s | 500+ req/s | **10x improvement** |
+
+
+Full load test outputs:
+
+- [Baseline run](docs/baseline-load-test.txt)
+- [Final run](docs/final-load-test.txt)
 
 **Note**: Your exact numbers may vary depending on your hardware, operating system (Windows/Linux/Mac), and whether you're using PostgreSQL or H2. What matters is the dramatic improvement in all metrics!
 

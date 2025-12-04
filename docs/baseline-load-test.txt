@@ -1,0 +1,16 @@
+Load Test Results - Mon, Nov 24, 2025  3:54:05 PM
+========================================
+Configuration:
+  API URL:      http://localhost:8080
+  Endpoint:     /leaderboard/top?limit=100
+  Requests:     500
+  Concurrency:  10
+
+Results:
+  Total Requests:     500
+  Average:            1289ms
+  Min:                809ms
+  Max:                ms
+  P50:                928ms
+  P95:                1765ms
+  P99:                6097ms
